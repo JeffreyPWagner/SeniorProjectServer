@@ -1,9 +1,6 @@
 package com.company;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -11,7 +8,7 @@ import java.util.List;
 
 public class Server extends Thread {
 
-    private  List<ClientHandler> clients;
+    private  List<Socket> clients;
     private boolean running;
     private ServerSocket serverSocket;
 
@@ -31,9 +28,7 @@ public class Server extends Thread {
             while (running) {
                 Socket socket = serverSocket.accept();
                 if (running) {
-                    ClientHandler handler = new ClientHandler(socket);
-                    handler.start();
-                    clients.add(handler);
+                    clients.add(socket);
                 }
             }
         } catch (IOException e) {
@@ -47,5 +42,9 @@ public class Server extends Thread {
 
     public ServerSocket getServerSocket() {
         return serverSocket;
+    }
+
+    public List<Socket> getClients() {
+        return clients;
     }
 }

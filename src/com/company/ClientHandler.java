@@ -1,20 +1,29 @@
 package com.company;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.ServerSocket;
+import java.io.DataInputStream;
+import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.util.List;
 
 public class ClientHandler extends Thread {
 
-    private static BufferedReader bufferedReader;
-    private static InputStreamReader inputStreamReader;
+    private DataInputStream dataInputStream;
+    private ObjectOutputStream objectOutputStream;
+    private List<Double> gene;
+    private DScoreCalculator master;
+    private int geneNumber;
+    private int socketNumber;
 
-    public ClientHandler(Socket socket) {
+    public ClientHandler(Socket socket, List<Double> gene, DScoreCalculator master, int geneNumber, int socketNumber) {
         try {
-            inputStreamReader = new InputStreamReader(socket.getInputStream());
-            bufferedReader = new BufferedReader(inputStreamReader);
+            dataInputStream = new DataInputStream(socket.getInputStream());
+
+            objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
+            this.gene = gene;
+            this.geneNumber = geneNumber;
+            this.master = master;
+            this.socketNumber = socketNumber;
+
         } catch (Exception e) {
             System.out.println(e);
         }
@@ -22,14 +31,10 @@ public class ClientHandler extends Thread {
 
     public void run() {
         try {
-            boolean running = true;
-            while (running) {
-                String message = bufferedReader.readLine();
-                System.out.println(message);
-                running = false;
-            }
-            inputStreamReader.close();
-            bufferedReader.close();
+            objectOutputStream.writeObject(gene);
+            master.getDScores().put(geneNumber,dataInputStream.readDouble());
+            master.getAvailableClients().add(socketNumber);
+            master.getGeneNumbers().remove(geneNumber);
         } catch (Exception e) {
             e.printStackTrace();
         }
