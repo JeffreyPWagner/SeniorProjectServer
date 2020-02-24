@@ -9,7 +9,7 @@ public class Main {
     public static void main(String[] args) {
         try {
             Server server = new Server();
-            List<Socket> clients = server.getClients();
+            List<Client> clients = server.getClients();
             server.start();
             Scanner scanner = new Scanner(System.in);
             while (true) {

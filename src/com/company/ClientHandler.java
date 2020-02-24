@@ -7,18 +7,15 @@ import java.util.List;
 
 public class ClientHandler extends Thread {
 
-    private DataInputStream dataInputStream;
-    private ObjectOutputStream objectOutputStream;
-    private List<Double> gene;
+    private Client client;
+    private double[] gene;
     private DScoreCalculator master;
     private int geneNumber;
     private int socketNumber;
 
-    public ClientHandler(Socket socket, List<Double> gene, DScoreCalculator master, int geneNumber, int socketNumber) {
+    public ClientHandler(Client client, double[] gene, DScoreCalculator master, int geneNumber, int socketNumber) {
         try {
-            dataInputStream = new DataInputStream(socket.getInputStream());
-
-            objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
+            this.client = client;
             this.gene = gene;
             this.geneNumber = geneNumber;
             this.master = master;
@@ -31,10 +28,14 @@ public class ClientHandler extends Thread {
 
     public void run() {
         try {
-            objectOutputStream.writeObject(gene);
-            master.getDScores().put(geneNumber,dataInputStream.readDouble());
+            System.out.println("Sending gene " + geneNumber + " to client " + socketNumber);
+            client.getObjectOutputStream().writeObject(gene);
+            double dScore = client.getDataInputStream().readDouble();
+            System.out.println("Score " + dScore + " received for gene " + geneNumber + " from client " + socketNumber);
+            master.getDScores().putIfAbsent(geneNumber, dScore);
+            master.getGeneNumbers().remove(Integer.valueOf(geneNumber));
             master.getAvailableClients().add(socketNumber);
-            master.getGeneNumbers().remove(geneNumber);
+            System.out.println("Client " + socketNumber + " is available");
         } catch (Exception e) {
             e.printStackTrace();
         }

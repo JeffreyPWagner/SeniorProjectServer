@@ -4,17 +4,18 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class Server extends Thread {
 
-    private  List<Socket> clients;
+    private  List<Client> clients;
     private boolean running;
     private ServerSocket serverSocket;
 
     public Server() {
         try {
-            clients = new ArrayList<>();
+            clients = Collections.synchronizedList(new ArrayList<>());
             running = true;
             serverSocket = new ServerSocket(5000);
             System.out.println("The server is running");
@@ -28,7 +29,8 @@ public class Server extends Thread {
             while (running) {
                 Socket socket = serverSocket.accept();
                 if (running) {
-                    clients.add(socket);
+                    clients.add(new Client(socket));
+                    System.out.println("New client added");
                 }
             }
         } catch (IOException e) {
@@ -44,7 +46,7 @@ public class Server extends Thread {
         return serverSocket;
     }
 
-    public List<Socket> getClients() {
+    public List<Client> getClients() {
         return clients;
     }
 }
