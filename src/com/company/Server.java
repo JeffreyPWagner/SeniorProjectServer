@@ -9,7 +9,7 @@ import java.util.List;
 
 public class Server extends Thread {
 
-    private  List<Client> clients;
+    private List<Client> clients;
     private boolean running;
     private ServerSocket serverSocket;
 

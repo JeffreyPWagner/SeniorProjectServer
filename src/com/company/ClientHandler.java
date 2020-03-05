@@ -1,25 +1,27 @@
 package com.company;
 
 import java.io.DataInputStream;
+import java.io.EOFException;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.List;
 
 public class ClientHandler extends Thread {
 
+    private List<Client> clients;
     private Client client;
     private double[] gene;
     private DScoreCalculator master;
     private int geneNumber;
-    private int socketNumber;
 
-    public ClientHandler(Client client, double[] gene, DScoreCalculator master, int geneNumber, int socketNumber) {
+    public ClientHandler(List<Client> clients, Client client, double[] gene, DScoreCalculator master, int geneNumber) {
         try {
+            this.clients = clients;
             this.client = client;
             this.gene = gene;
             this.geneNumber = geneNumber;
             this.master = master;
-            this.socketNumber = socketNumber;
 
         } catch (Exception e) {
             System.out.println(e);
@@ -28,14 +30,18 @@ public class ClientHandler extends Thread {
 
     public void run() {
         try {
-            System.out.println("Sending gene " + geneNumber + " to client " + socketNumber);
+            System.out.println("Sending gene " + geneNumber);
             client.getObjectOutputStream().writeObject(gene);
             double dScore = client.getDataInputStream().readDouble();
-            System.out.println("Score " + dScore + " received for gene " + geneNumber + " from client " + socketNumber);
+            System.out.println("Score " + dScore + " received for gene " + geneNumber);
             master.getDScores().putIfAbsent(geneNumber, dScore);
             master.getGeneNumbers().remove(Integer.valueOf(geneNumber));
-            master.getAvailableClients().add(socketNumber);
-            System.out.println("Client " + socketNumber + " is available");
+            clients.add(client);
+            System.out.println("Client is available");
+        } catch (EOFException e) {
+            System.out.println("Client disconnected");
+        } catch (SocketException e) {
+            System.out.println("Client disconnected");
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -1,28 +1,23 @@
 package com.company;
 
-import javafx.util.Pair;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.PrintWriter;
-import java.net.Socket;
 import java.util.*;
 
 public class DScoreCalculator {
 
-    private List<List<String>> fileData;
     private double[][] geneData;
     private List<String> geneLabels;
     private List<Integer> geneNumbers;
-    private List<Integer> availableClients;
     private static Map<Integer, Double> dScores;
 
     private void loadData(String filePath) {
         try {
             dScores = Collections.synchronizedMap(new TreeMap<>());
-            fileData = new ArrayList<>();
             geneLabels = new ArrayList<>();
+            List<List<String>> fileData = new ArrayList<>();
 
             // read in the raw file data
             String row;
@@ -80,33 +75,23 @@ public class DScoreCalculator {
     public void calculateDScore (String filePath, List<Client> clients) {
         loadData(filePath);
         Random random = new Random();
-        availableClients = Collections.synchronizedList(new ArrayList<>());
         geneNumbers = Collections.synchronizedList(new ArrayList<>());
         for (int i=0; i<geneData.length; i++) {
             geneNumbers.add(i);
         }
 
-        System.out.println("Sending first batch of genes to clients");
-
+        System.out.println("Processing genes");
         int geneNumber = 0;
 
-        for (int clientNumber=0; geneNumber < geneData.length && clientNumber < clients.size(); clientNumber++, geneNumber++) {
-            ClientHandler clientHandler = new ClientHandler(clients.get(clientNumber), geneData[geneNumber], this, geneNumber, clientNumber);
-            clientHandler.start();
-        }
-
-        System.out.println("Processing remaining genes");
-
         while (dScores.size() < geneData.length ) {
-            if (availableClients.size() > 0) {
+            if (clients.size() > 0) {
                 if (geneNumbers.size() > 1) {
                     geneNumber = geneNumbers.get(random.nextInt(geneNumbers.size()));
                 } else {
                     geneNumber = geneNumbers.get(0);
                 }
                 if (!geneNumbers.isEmpty()) {
-                    ClientHandler clientHandler = new ClientHandler(clients.get(availableClients.get(0)), geneData[geneNumber], this, geneNumber, availableClients.get(0));
-                    availableClients.remove(0);
+                    ClientHandler clientHandler = new ClientHandler(clients, clients.remove(0), geneData[geneNumber], this, geneNumber);
                     clientHandler.start();
                 }
             }
@@ -125,9 +110,5 @@ public class DScoreCalculator {
 
     public List<Integer> getGeneNumbers() {
         return geneNumbers;
-    }
-
-    public List<Integer> getAvailableClients() {
-        return availableClients;
     }
 }
